@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>فروع كاريبو – مصر</title>
+<title>Caribou Branches – Egypt | فروع كاريبو</title>
 <style>
-  :root{--ink:#14213d;--muted:#667085;--line:#e4e7ec;--bg:#f6f7f9;--card:#fff;--accent:#0b4f8a;--accent-soft:#e6f0fa;--ok:#0f7a4a}
+  :root{--ink:#2b1d12;--muted:#667085;--line:#e4e7ec;--bg:#f6f7f9;--card:#fff;--accent:#4a2f1a;--accent-soft:#e3f1f4;--teal:#62aebb;--ok:#0f7a4a}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:var(--accent);color:#fff;padding:20px 16px 16px}
+  header{background:#fff;color:var(--accent);border-bottom:4px solid var(--teal);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand img{height:64px;width:auto;flex:none}
   header h1{margin:0;font-size:1.35rem}
-  header p{margin:4px 0 0;opacity:.85;font-size:.9rem}
+  header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+  #langBtn{flex:none;background:var(--accent-soft);color:var(--accent);border:1px solid var(--teal);border-radius:8px;padding:6px 12px;font-weight:600}
   main{max-width:760px;margin:0 auto;padding:12px 12px 40px}
   .tools{display:flex;gap:8px;margin:4px 0 12px}
-  input[type=search]{flex:1;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:#fff}
+  input[type=search]{flex:1;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:#fff}
   button,.btn{font:inherit;cursor:pointer}
-  .near{background:var(--ok);color:#fff;border:0;border-radius:10px;padding:0 14px;font-weight:600;white-space:nowrap}
+  .near{background:#2f7f8c;color:#fff;border:0;border-radius:10px;padding:0 14px;font-weight:600;white-space:nowrap}
   .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px}
   .chip{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;color:var(--ink)}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -24,10 +27,10 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
   .card.nearest{border-color:var(--ok);box-shadow:0 0 0 2px #0f7a4a22}
   .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-  .name{font-weight:700;font-size:1.05rem;direction:ltr;text-align:right}
+  .name{font-weight:700;font-size:1.05rem;unicode-bidi:plaintext}
   .tag{background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:.78rem;white-space:nowrap}
   .dist{background:#e7f6ee;color:var(--ok);border-radius:6px;padding:2px 8px;font-size:.8rem;font-weight:700;white-space:nowrap}
-  .meta{color:var(--muted);font-size:.9rem;margin-top:4px;line-height:1.6}
+  .meta{color:var(--muted);font-size:.9rem;margin-top:4px;line-height:1.6;unicode-bidi:plaintext}
   .actions{display:flex;gap:8px;margin-top:12px}
   .btn{flex:1;text-align:center;text-decoration:none;padding:10px;border-radius:10px;font-weight:600;font-size:.95rem}
   .btn.p{background:var(--accent);color:#fff}
@@ -37,13 +40,19 @@
 </head>
 <body>
 <header>
-  <h1>فروع كاريبو – مصر</h1>
-  <p>اختار المنطقة أو دوّر على أقرب فرع ليك</p>
+  <div class="brand">
+    <img src="logo.png" alt="Caribou Coffee">
+    <div>
+      <h1 id="title"></h1>
+      <p id="sub"></p>
+    </div>
+  </div>
+  <button id="langBtn"></button>
 </header>
 <main>
   <div class="tools">
-    <input id="q" type="search" placeholder="ابحث باسم الفرع أو المنطقة…">
-    <button class="near" id="nearBtn">📍 أقرب فرع</button>
+    <input id="q" type="search">
+    <button class="near" id="nearBtn"></button>
   </div>
   <div class="chips" id="chips"></div>
   <p class="status" id="status"></p>
@@ -53,18 +62,36 @@
 <script src="config.js"></script>
 <script src="data.js"></script>
 <script>
-  let ALL = [], region = "all", query = "", here = null;
+  let ALL = [], region = "all", query = "", here = null, statusKey = "";
+  let lang = "ar";
+  try { lang = localStorage.getItem("caribou_lang") || (/^ar/i.test(navigator.language) ? "ar" : "en"); } catch(e){}
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const safeUrl = u => /^https?:\/\//i.test(u) ? u : "#";
 
-  // ---- البيانات الاحتياطية من data.js ----
+  const T = {
+    ar: {title:"فروع كاريبو – مصر", sub:"اختار المنطقة أو دوّر على أقرب فرع ليك", search:"ابحث باسم الفرع أو المنطقة…",
+         near:"📍 أقرب فرع", all:"الكل", count:n => n + " فرع", sorted:"الفروع مرتبّة من الأقرب للأبعد حسب موقعك",
+         locating:"بحدد موقعك…", nogeo:"المتصفح مش بيدعم تحديد الموقع",
+         denied:"ماقدرتش أحدد موقعك — اسمح للموقع بالوصول لموقعك أو اختار المنطقة يدوي",
+         none:"مفيش نتائج", map:"افتح في الخريطة", dir:"الاتجاهات", m:"م", km:"كم", other:"English"},
+    en: {title:"Caribou Branches – Egypt", sub:"Pick a region or find your nearest branch", search:"Search by branch or area…",
+         near:"📍 Nearest branch", all:"All", count:n => n + (n === 1 ? " branch" : " branches"),
+         sorted:"Sorted from nearest to farthest based on your location",
+         locating:"Finding your location…", nogeo:"Your browser doesn't support location",
+         denied:"Couldn't get your location — allow location access or pick a region manually",
+         none:"No results", map:"Open in Maps", dir:"Directions", m:"m", km:"km", other:"عربي"}
+  };
+  const REGION_EN = {"القاهرة":"Cairo", "أكتوبر والزايد":"October & Zayed", "الإسكندرية":"Alexandria"};
+  const t = k => T[lang][k];
+  const regionLabel = b => lang === "en" ? (b.region_en || REGION_EN[b.region] || b.region) : b.region;
+  const nameLabel = b => lang === "ar" && b.name_ar ? b.name_ar : b.name;
+
   function fromDataJs(){
-    const nm = id => (REGIONS.find(r => r.id === id) || {}).name || id;
-    return BRANCHES.map(b => ({...b, region: nm(b.region)}));
+    const find = id => REGIONS.find(r => r.id === id) || {};
+    return BRANCHES.map(b => ({...b, region: find(b.region).name || b.region, region_en: find(b.region).en || ""}));
   }
 
-  // ---- قراءة CSV (يدعم الاقتباس والأسطر المتعددة) ----
   function parseCSV(t){
     const rows = []; let row = [], cur = "", q = false;
     for (let i = 0; i < t.length; i++){
@@ -79,13 +106,13 @@
     return rows;
   }
   function fromCSV(text){
-    const rows = parseCSV(text.replace(/^\ufeff/, "")).filter(r => r.some(x => x.trim()));
+    const rows = parseCSV(text.replace(/^﻿/, "")).filter(r => r.some(x => x.trim()));
     const head = rows.shift().map(h => h.trim().toLowerCase());
     return rows.map(r => {
       const o = {}; head.forEach((h, i) => o[h] = (r[i] || "").trim());
       const lat = parseFloat(o.lat), lng = parseFloat(o.lng);
-      return {region: o.region, name: o.name, area: o.area, address: o.address, phone: o.phone, hours: o.hours,
-              lat: isNaN(lat) ? null : lat, lng: isNaN(lng) ? null : lng, link: o.link};
+      return {region: o.region, region_en: o.region_en, name: o.name, name_ar: o.name_ar, area: o.area, address: o.address,
+              phone: o.phone, hours: o.hours, lat: isNaN(lat) ? null : lat, lng: isNaN(lng) ? null : lng, link: o.link};
     }).filter(b => b.name && b.region);
   }
 
@@ -115,39 +142,57 @@
     return 2 * R * Math.asin(Math.sqrt(h));
   }
 
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.title = t("title");
+    $("title").textContent = t("title");
+    $("sub").textContent = t("sub");
+    $("q").placeholder = t("search");
+    $("nearBtn").textContent = t("near");
+    $("langBtn").textContent = t("other");
+  }
+
   function renderChips(){
-    const names = [...new Set(ALL.map(b => b.region))];
-    const items = [{id:"all", n:ALL.length}].concat(names.map(n => ({id:n, n:ALL.filter(b => b.region === n).length})));
+    const seen = new Map();
+    ALL.forEach(b => { if (!seen.has(b.region)) seen.set(b.region, b); });
+    const items = [{id:"all", label:t("all"), n:ALL.length}]
+      .concat([...seen].map(([id, b]) => ({id, label:regionLabel(b), n:ALL.filter(x => x.region === id).length})));
     $("chips").innerHTML = items.map(i =>
-      `<button class="chip ${i.id === region ? "on" : ""}" data-id="${esc(i.id)}">${i.id === "all" ? "الكل" : esc(i.id)}<small>${i.n}</small></button>`).join("");
+      `<button class="chip ${i.id === region ? "on" : ""}" data-id="${esc(i.id)}">${esc(i.label)}<small>${i.n}</small></button>`).join("");
     $("chips").querySelectorAll(".chip").forEach(c => c.onclick = () => { region = c.dataset.id; render(); });
   }
 
   function render(){
+    applyLang();
     renderChips();
     const q = query.trim().toLowerCase();
     let rows = ALL
       .map(b => ({...b, d: here && b.lat != null ? km(here.lat, here.lng, b.lat, b.lng) : null}))
       .filter(b => region === "all" || b.region === region)
-      .filter(b => !q || [b.name, b.area, b.address, b.region].join(" ").toLowerCase().includes(q));
+      .filter(b => !q || [b.name, b.name_ar, b.area, b.address, b.region, b.region_en, REGION_EN[b.region]].join(" ").toLowerCase().includes(q));
     if (here) rows.sort((a, b) => (a.d == null) - (b.d == null) || a.d - b.d);
 
-    $("status").textContent = here ? "الفروع مرتبّة من الأقرب للأبعد حسب موقعك" : rows.length + " فرع";
-    if (!rows.length){ $("list").innerHTML = '<div class="empty">مفيش نتائج</div>'; return; }
+    $("status").textContent = statusKey === "locating" ? t("locating")
+      : statusKey === "denied" ? t("denied")
+      : statusKey === "nogeo" ? t("nogeo")
+      : here ? t("sorted") : t("count")(rows.length);
+    if (!rows.length){ $("list").innerHTML = `<div class="empty">${t("none")}</div>`; return; }
 
     $("list").innerHTML = rows.map((b, i) => {
       const dir = b.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lng}` : "";
       const meta = [esc(b.address), b.area && !b.address ? esc(b.area) : "", b.phone ? "📞 " + esc(b.phone) : "", b.hours ? "🕒 " + esc(b.hours) : ""]
         .filter(Boolean).join("<br>");
+      const dist = b.d == null ? "" : (b.d < 1 ? Math.round(b.d * 1000) + " " + t("m") : b.d.toFixed(1) + " " + t("km"));
       return `<div class="card ${here && i === 0 && b.d != null ? "nearest" : ""}">
         <div class="top">
-          <div class="name">${esc(b.name)}</div>
-          ${b.d != null ? `<span class="dist">${b.d < 1 ? Math.round(b.d * 1000) + " م" : b.d.toFixed(1) + " كم"}</span>` : `<span class="tag">${esc(b.region)}</span>`}
+          <div class="name">${esc(nameLabel(b))}</div>
+          ${b.d != null ? `<span class="dist">${dist}</span>` : `<span class="tag">${esc(regionLabel(b))}</span>`}
         </div>
         ${meta ? `<div class="meta">${meta}</div>` : ""}
         <div class="actions">
-          ${b.link ? `<a class="btn p" href="${safeUrl(b.link)}" target="_blank" rel="noopener">افتح في الخريطة</a>` : ""}
-          ${dir ? `<a class="btn s" href="${dir}" target="_blank" rel="noopener">الاتجاهات</a>` : ""}
+          ${b.link ? `<a class="btn p" href="${safeUrl(b.link)}" target="_blank" rel="noopener">${t("map")}</a>` : ""}
+          ${dir ? `<a class="btn s" href="${dir}" target="_blank" rel="noopener">${t("dir")}</a>` : ""}
         </div>
       </div>`;
     }).join("");
@@ -155,12 +200,18 @@
 
   $("q").oninput = e => { query = e.target.value; render(); };
 
+  $("langBtn").onclick = () => {
+    lang = lang === "ar" ? "en" : "ar";
+    try { localStorage.setItem("caribou_lang", lang); } catch(e){}
+    render();
+  };
+
   $("nearBtn").onclick = () => {
-    if (!navigator.geolocation){ $("status").textContent = "المتصفح مش بيدعم تحديد الموقع"; return; }
-    $("status").textContent = "بحدد موقعك…";
+    if (!navigator.geolocation){ statusKey = "nogeo"; render(); return; }
+    statusKey = "locating"; render();
     navigator.geolocation.getCurrentPosition(
-      p => { here = {lat:p.coords.latitude, lng:p.coords.longitude}; region = "all"; render(); window.scrollTo({top:0, behavior:"smooth"}); },
-      () => { $("status").textContent = "ماقدرتش أحدد موقعك — اسمح للموقع بالوصول لموقعك أو اختار المنطقة يدوي"; },
+      p => { here = {lat:p.coords.latitude, lng:p.coords.longitude}; region = "all"; statusKey = ""; render(); window.scrollTo({top:0, behavior:"smooth"}); },
+      () => { statusKey = "denied"; render(); },
       {enableHighAccuracy:true, timeout:10000}
     );
   };

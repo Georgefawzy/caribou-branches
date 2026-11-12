@@ -1,7 +1,8 @@
 // بيانات الفروع — عدّل هنا فقط (إضافة فرع / تعديل عنوان / حذف).
 // الحقول:
 //   region  : cairo | october | alex   (أو أضف منطقة جديدة في REGIONS تحت)
-//   name    : اسم الفرع
+//   name    : اسم الفرع (إنجليزي)
+//   name_ar : اسم الفرع بالعربي (اختياري — يظهر في النسخة العربية)
 //   area    : المنطقة / الحي (اختياري)
 //   address : العنوان بالتفصيل (اختياري — يظهر تحت الاسم لو اتكتب)
 //   phone   : رقم التليفون (اختياري)
@@ -10,9 +11,9 @@
 //   link    : لينك Google Maps
 
 const REGIONS = [
-  { id: "cairo",   name: "القاهرة" },
-  { id: "october", name: "أكتوبر والزايد" },
-  { id: "alex",    name: "الإسكندرية" }
+  { id: "cairo",   name: "القاهرة",         en: "Cairo" },
+  { id: "october", name: "أكتوبر والزايد",   en: "October & Zayed" },
+  { id: "alex",    name: "الإسكندرية",       en: "Alexandria" }
 ];
 
 const BRANCHES = [

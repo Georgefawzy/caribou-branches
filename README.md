@@ -5,10 +5,14 @@
 ## 1) تجهيز الشيت
 1. افتح Google Sheets ← File ← Import ← Upload ← `branches.csv` ← Replace spreadsheet.
 2. الأعمدة (لا تغيّر أسماءها ولا ترتيبها في الصف الأول):
-   `region, name, area, address, phone, hours, lat, lng, link`
+   `region, name, area, address, phone, hours, lat, lng, link, region_en, name_ar`
    - `region`: اسم المنطقة كما يظهر على الزرار (القاهرة / أكتوبر والزايد / الإسكندرية…). اكتب اسم منطقة جديدة وهيظهر زرار لها تلقائياً.
    - `lat` / `lng`: إحداثيات الفرع (لزر "أقرب فرع"). من Google Maps اضغط مطوّلاً على مكان الفرع. لو فاضية الفرع يظهر عادي بدون مسافة.
    - `address` / `phone` / `hours`: اختيارية.
+   - `region_en`: اسم المنطقة بالإنجليزي (اختياري؛ القاهرة وأكتوبر والزايد والإسكندرية معرّفين تلقائياً).
+   - `name_ar`: اسم الفرع بالعربي (اختياري؛ يظهر في النسخة العربية بدل الإنجليزي).
+
+الموقع فيه زرار تبديل اللغة (عربي / English) فوق.
 3. File ← Share ← Publish to web ← اختار الشيت (Sheet1) و **Comma-separated values (.csv)** ← Publish ← انسخ اللينك.
 
 ## 2) ربط الموقع بالشيت
